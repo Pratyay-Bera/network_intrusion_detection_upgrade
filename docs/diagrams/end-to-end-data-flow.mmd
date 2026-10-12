@@ -1,0 +1,42 @@
+flowchart LR
+  classDef data fill:#dbeafe,stroke:#2563eb,color:#1e3a8a;
+  classDef process fill:#ccfbf1,stroke:#0f766e,color:#134e4a;
+  classDef model fill:#ede9fe,stroke:#7c3aed,color:#4c1d95;
+  classDef eval fill:#fef3c7,stroke:#d97706,color:#92400e;
+  classDef error fill:#fee2e2,stroke:#dc2626,color:#7f1d1d;
+  classDef infra fill:#e5e7eb,stroke:#6b7280,color:#111827;
+
+  subgraph OFF["Offline Training Workflow"]
+    d1["📄 Train/Test CSV"] --> v1["✅ Load + Basic Schema Check"]
+    v1 --> fs["🧩 Split Features & label"]
+    fs --> drop["🗑️ Drop id, stcpb, dtcpb"]
+    drop --> prep["🧹 OHE via ColumnTransformer"]
+    prep --> bal["⚖️ SMOTE on train"]
+    bal --> scl["📏 StandardScaler"]
+    scl --> red["🧭 PCA (20)"]
+    red --> train["🧠 Train + Tune 8 Models"]
+    train --> sel["🏆 Select Best Model"]
+    sel --> art[("💾 Persist model + preprocessors")]
+    train --> rpt[("📊 model_comparison.csv + PNG reports")]
+  end
+
+  subgraph ON["Online / Batch Inference Workflow"]
+    up["📤 CSV Upload"] --> iv["🔍 Input Read"]
+    iv --> ivd{"Expected columns?"}
+    ivd -->|No| e1["🚨 Prediction Error shown"]
+    ivd -->|Yes| tr1["🧹 preprocessor.transform"]
+    tr1 --> tr2["📏 scaler.transform"]
+    tr2 --> tr3["🧭 pca.transform"]
+    tr3 --> pred["🔮 best_model.predict"]
+    pred --> cls["🛡️ 0=Normal / 1=Attack"]
+    cls --> viz["📈 Table + Metrics + Pie Chart"]
+  end
+
+  art -. loaded at runtime .-> tr1
+
+  class d1,up,art data;
+  class v1,fs,drop,prep,bal,scl,red,iv,tr1,tr2,tr3 process;
+  class train,sel,pred model;
+  class rpt,viz,cls eval;
+  class e1 error;
+  class OFF,ON,ivd infra;
