@@ -306,7 +306,7 @@ This performs preprocessing, SMOTE, scaling, feature engineering, PCA, model tra
 Run:
 
 ```bash
-streamlit run app.py
+streamlit run src/app.py
 ```
 
 The dashboard will open in your browser.
