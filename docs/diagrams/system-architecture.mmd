@@ -1,73 +1,89 @@
 flowchart LR
-  %% Classes
-  classDef data fill:#dbeafe,stroke:#2563eb,color:#1e3a8a,stroke-width:1px;
-  classDef process fill:#ccfbf1,stroke:#0f766e,color:#134e4a,stroke-width:1px;
-  classDef model fill:#ede9fe,stroke:#7c3aed,color:#4c1d95,stroke-width:1px;
-  classDef eval fill:#fef3c7,stroke:#d97706,color:#92400e,stroke-width:1px;
-  classDef error fill:#fee2e2,stroke:#dc2626,color:#7f1d1d,stroke-width:1px;
-  classDef infra fill:#e5e7eb,stroke:#6b7280,color:#111827,stroke-width:1px;
+  %% ---------- Styles ----------
+  classDef data fill:#DBEAFE,stroke:#2563EB,color:#1E3A8A,stroke-width:1px;
+  classDef process fill:#CCFBF1,stroke:#0F766E,color:#134E4A,stroke-width:1px;
+  classDef model fill:#EDE9FE,stroke:#7C3AED,color:#4C1D95,stroke-width:1px;
+  classDef eval fill:#FEF3C7,stroke:#D97706,color:#92400E,stroke-width:1px;
+  classDef error fill:#FEE2E2,stroke:#DC2626,color:#7F1D1D,stroke-width:1px;
+  classDef infra fill:#E5E7EB,stroke:#6B7280,color:#111827,stroke-width:1px;
 
-  subgraph DL["Data Layer"]
-    train[(📄 UNSW_NB15_training-set_updated.csv)]
-    test[(📄 UNSW_NB15_testing-set_updated.csv)]
-    upload[(📤 User CSV Upload)]
+  %% ---------- Offline Training ----------
+  subgraph OFF["Offline Training Boundary"]
+    direction LR
+
+    subgraph DL["Data Layer"]
+      train[(🗂️ data/UNSW_NB15_training-set_updated.csv)]
+      test[(🗂️ data/UNSW_NB15_testing-set_updated.csv)]
+    end
+
+    subgraph PL["Processing Layer"]
+      split["🧩 Split X/y\nDrop: id, stcpb, dtcpb"]
+      prep["🧹 ColumnTransformer\nnum passthrough + OHE"]
+      smote["⚖️ SMOTE (train only)"]
+      scale["📏 StandardScaler(with_mean=False)"]
+      pca["🧭 PCA(n_components=20)"]
+    end
+
+    subgraph ML["Machine Learning Layer"]
+      candidates["🧠 8 Candidate Classifiers"]
+      tune["🔧 cross_val_score + GridSearchCV"]
+      gate{"🏆 Select Best\nMacro F1 → Attack Recall → Accuracy"}
+    end
+
+    subgraph AS["Artifact Storage Layer"]
+      best[(💾 models/best_model.pkl)]
+      pre[(💾 models/preprocessor.pkl)]
+      sc[(💾 models/scaler.pkl)]
+      p[(💾 models/pca.pkl)]
+      cmp[(📊 data/model_comparison.csv)]
+      imgs[(🖼️ outputs/*.png)]
+    end
+
+    train --> split
+    test --> split
+    split --> prep --> smote --> scale --> pca --> candidates --> tune --> gate
+    gate --> best
+    prep --> pre
+    scale --> sc
+    pca --> p
+    tune --> cmp
+    tune --> imgs
   end
 
-  subgraph PL["Processing Layer"]
-    prep["🧹 ColumnTransformer\n(num passthrough + OHE)"]
-    smote["⚖️ SMOTE (train only)"]
-    scale["📏 StandardScaler"]
-    pca["🧭 PCA (20 components)"]
+  %% ---------- Online Inference ----------
+  subgraph ON["Application & Inference Boundary"]
+    direction LR
+    user["👤 Analyst"]
+    upload[(📤 CSV Upload)]
+    app["🖥️ Streamlit App\nsrc/app.py"]
+    infer["🔮 transform → predict"]
+    output["📈 Table, metrics, pie chart"]
+    fail["🚨 st.error / st.warning"]
+
+    user --> upload --> app --> infer --> output
+    app --> fail
   end
 
-  subgraph ML["Machine Learning Layer"]
-    models["🧠 Candidate Models (8)"]
-    tune["🔧 CV + GridSearchCV"]
-    select["🏆 Best Model Selection\n(Macro F1 → Recall Attack → Accuracy)"]
-    infer["🔮 Predict 0/1"]
+  pre --> app
+  sc --> app
+  p --> app
+  best --> app
+  app -. missing or incompatible artifacts .-> fail
+
+  %% ---------- Legend ----------
+  subgraph L["Legend"]
+    direction TB
+    l1["Blue: data inputs / files"]
+    l2["Teal: preprocessing / transforms"]
+    l3["Purple: ML models / artifacts"]
+    l4["Amber: evaluation outputs"]
+    l5["Red: validation/runtime errors"]
+    l6["Gray: users / system boundaries"]
   end
 
-  subgraph AS["Artifact Storage Layer"]
-    m1[(💾 models/best_model.pkl)]
-    m2[(💾 models/preprocessor.pkl)]
-    m3[(💾 models/scaler.pkl)]
-    m4[(💾 models/pca.pkl)]
-    comp[(📊 data/model_comparison.csv)]
-    imgs[(🖼️ outputs/*.png)]
-  end
-
-  subgraph AP["Application & Presentation Layer"]
-    app["🖥️ Streamlit: src/app.py"]
-    table["📋 Prediction Table"]
-    stats["📈 Normal vs Attack Metrics"]
-    pie["🥧 Traffic Distribution"]
-    err["🚨 st.error on transform/predict failure"]
-  end
-
-  train --> prep
-  test --> prep
-  prep --> smote --> scale --> pca --> models --> tune --> select
-  select --> m1
-  prep --> m2
-  scale --> m3
-  pca --> m4
-  tune --> comp
-  tune --> imgs
-
-  upload --> app
-  m1 --> app
-  m2 --> app
-  m3 --> app
-  m4 --> app
-
-  app --> infer --> table
-  infer --> stats
-  infer --> pie
-  app --> err
-
-  class train,test,upload data;
-  class prep,smote,scale,pca,app process;
-  class models,tune,select,infer,m1,m2,m3,m4 model;
-  class comp,imgs,table,stats,pie eval;
-  class err error;
-  class DL,PL,ML,AS,AP infra;
+  class train,test,upload,cmp,imgs data;
+  class split,prep,smote,scale,pca,infer process;
+  class candidates,tune,gate,best,pre,sc,p model;
+  class output,l1,l2,l3,l4,l5,l6 eval;
+  class fail error;
+  class user,app,OFF,ON,DL,PL,ML,AS,L infra;

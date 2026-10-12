@@ -1,43 +1,57 @@
 flowchart TB
-  classDef data fill:#dbeafe,stroke:#2563eb,color:#1e3a8a;
-  classDef process fill:#ccfbf1,stroke:#0f766e,color:#134e4a;
-  classDef model fill:#ede9fe,stroke:#7c3aed,color:#4c1d95;
-  classDef eval fill:#fef3c7,stroke:#d97706,color:#92400e;
-  classDef error fill:#fee2e2,stroke:#dc2626,color:#7f1d1d;
-  classDef infra fill:#e5e7eb,stroke:#6b7280,color:#111827;
+  classDef data fill:#DBEAFE,stroke:#2563EB,color:#1E3A8A;
+  classDef process fill:#CCFBF1,stroke:#0F766E,color:#134E4A;
+  classDef model fill:#EDE9FE,stroke:#7C3AED,color:#4C1D95;
+  classDef eval fill:#FEF3C7,stroke:#D97706,color:#92400E;
+  classDef error fill:#FEE2E2,stroke:#DC2626,color:#7F1D1D;
+  classDef infra fill:#E5E7EB,stroke:#6B7280,color:#111827;
 
-  start(["Start: src/train_models.py"]) --> load["📄 Load train/test CSV"]
-  load --> split["🧩 X_train_raw, y_train, X_test_raw, y_test"]
-  split --> drop["🗑️ Drop id/stcpb/dtcpb from features"]
-  drop --> prep["🧹 Fit ColumnTransformer on train\nTransform train + test"]
-  prep --> smote["⚖️ SMOTE on transformed train only"]
-  smote --> scale["📏 Fit StandardScaler on SMOTE-train\nTransform train + test"]
-  scale --> featimp["📌 Train RandomForest for feature importance plot\n(using pre-SMOTE labels)"]
-  scale --> pca["🧭 Fit PCA(20) on scaled train\nTransform train + test"]
+  start(["Start src/train_models.py"]) --> load["📄 Load train/test datasets"]
+  load --> split["🧩 Build X_train_raw, y_train, X_test_raw, y_test"]
+  split --> drop["🗑️ Drop id, stcpb, dtcpb"]
 
-  pca --> loop["🔁 For each candidate model"]
+  subgraph FE["Training-time Transform Chain"]
+    direction TB
+    prep["🧹 ColumnTransformer\nfit on X_train_raw"]
+    smote["⚖️ SMOTE\nfit_resample on transformed X_train only"]
+    scale["📏 StandardScaler(with_mean=False)\nfit on resampled train"]
+    pca["🧭 PCA(20)\nfit on scaled train"]
+  end
+
+  drop --> prep --> smote --> scale --> pca
+
+  scale --> fi["🌲 RandomForest feature importance\n(uses pre-SMOTE labels copy)"]
+  load --> heat["🧊 Correlation heatmap on numeric train cols"]
+
+  pca --> loop["🔁 For each model in candidates"]
   loop --> cv10["10-fold cross_val_score"]
-  cv10 --> grid5["GridSearchCV (cv=5)"]
-  grid5 --> testeval["🧪 Predict on test + evaluate_model()"]
-  testeval --> collect["Append metrics to results"]
-  collect --> best{"Better by\nMacro F1, then Recall Attack, then Accuracy?"}
+  cv10 --> grid["GridSearchCV (cv=5)"]
+  grid --> pred["🔮 Predict on X_test_pca"]
+  pred --> eval["📊 evaluate_model()\nacc, precision_w, recall_w, f1_w, macro_f1, recall_attack, roc_auc, cm"]
+  eval --> best{"Better than current best?\nmacro_f1 >\nthen recall_attack >\nthen accuracy >"}
   best -->|Yes| keep["Update best_model"]
   best -->|No| loop
   keep --> loop
 
-  loop --> savecsv["📝 Save data/model_comparison.csv"]
-  savecsv --> saveplots["🖼️ Save outputs/*.png"]
-  saveplots --> dump["💾 joblib.dump best_model, preprocessor, scaler, pca"]
-  dump --> done(["Done"])
+  loop --> saveCsv[("📝 Save data/model_comparison.csv")]
+  saveCsv --> savePlot[("🖼️ Save outputs/model_comparison.png")]
+  fi --> saveFI[("🖼️ Save outputs/feature_importance.png")]
+  heat --> saveHeat[("🖼️ Save outputs/correlation_heatmap.png")]
+  savePlot --> persist[("💾 Dump best_model, preprocessor, scaler, pca")]
+  saveFI --> persist
+  saveHeat --> persist
+  persist --> end(["Training complete"])
 
-  note1["Leakage prevention present:\nfit transform objects on training split before test transform"]
-  note2["Current CV is run after global SMOTE/PCA on train set;\nnot fold-local pipeline (documented limitation)"]
+  note1["Leakage control implemented:\nall fit() operations are done on training split before test transform"]
+  note2["Current limitation:\nSMOTE/PCA are run before CV folds, not fold-local"]
+  proposed["Proposed best practice:\nuse a single imblearn Pipeline with CV/GridSearch around the full chain"]
 
-  prep -.-> note1
-  cv10 -.-> note2
+  prep -. evidence .-> note1
+  cv10 -. caveat .-> note2
+  note2 -. future improvement .-> proposed
 
-  class start,done infra;
   class load,split data;
-  class drop,prep,smote,scale,featimp,pca,loop,cv10,grid5,testeval,collect,keep,savecsv,saveplots process;
-  class best model;
-  class note1,note2 eval;
+  class drop,prep,smote,scale,pca,fi,heat,loop,cv10,grid,pred,keep,saveCsv,savePlot,saveFI,saveHeat,persist process;
+  class eval,best,note1,note2,proposed eval;
+  class start,end,FE infra;
+  class loop,grid model;
