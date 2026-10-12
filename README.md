@@ -247,8 +247,6 @@ The training pipeline automatically creates the `data`, `models`, and `outputs` 
 
 ## How to Run
 
-## How to Run
-
 ### 1. Create the Conda Environment
 
 Create a new Conda environment with Python 3.10:
