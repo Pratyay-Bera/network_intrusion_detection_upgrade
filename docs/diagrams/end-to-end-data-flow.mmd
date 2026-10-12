@@ -1,42 +1,46 @@
 flowchart LR
-  classDef data fill:#dbeafe,stroke:#2563eb,color:#1e3a8a;
-  classDef process fill:#ccfbf1,stroke:#0f766e,color:#134e4a;
-  classDef model fill:#ede9fe,stroke:#7c3aed,color:#4c1d95;
-  classDef eval fill:#fef3c7,stroke:#d97706,color:#92400e;
-  classDef error fill:#fee2e2,stroke:#dc2626,color:#7f1d1d;
-  classDef infra fill:#e5e7eb,stroke:#6b7280,color:#111827;
+  classDef data fill:#DBEAFE,stroke:#2563EB,color:#1E3A8A;
+  classDef process fill:#CCFBF1,stroke:#0F766E,color:#134E4A;
+  classDef model fill:#EDE9FE,stroke:#7C3AED,color:#4C1D95;
+  classDef eval fill:#FEF3C7,stroke:#D97706,color:#92400E;
+  classDef error fill:#FEE2E2,stroke:#DC2626,color:#7F1D1D;
+  classDef infra fill:#E5E7EB,stroke:#6B7280,color:#111827;
 
-  subgraph OFF["Offline Training Workflow"]
-    d1["📄 Train/Test CSV"] --> v1["✅ Load + Basic Schema Check"]
-    v1 --> fs["🧩 Split Features & label"]
-    fs --> drop["🗑️ Drop id, stcpb, dtcpb"]
-    drop --> prep["🧹 OHE via ColumnTransformer"]
-    prep --> bal["⚖️ SMOTE on train"]
-    bal --> scl["📏 StandardScaler"]
-    scl --> red["🧭 PCA (20)"]
-    red --> train["🧠 Train + Tune 8 Models"]
-    train --> sel["🏆 Select Best Model"]
-    sel --> art[("💾 Persist model + preprocessors")]
-    train --> rpt[("📊 model_comparison.csv + PNG reports")]
+  subgraph OFF["Offline Training Flow"]
+    direction LR
+    d0[(📄 Train/Test CSV)] --> d1["✅ pd.read_csv"]
+    d1 --> d2["🧩 X/y split"]
+    d2 --> d3["🗑️ Drop id, stcpb, dtcpb"]
+    d3 --> d4["🧹 Fit/transform ColumnTransformer"]
+    d4 --> d5["⚖️ SMOTE on X_train only"]
+    d5 --> d6["📏 Fit scaler on train"]
+    d6 --> d7["🧭 Fit PCA on train"]
+    d7 --> d8["🧠 Train + tune candidate models"]
+    d8 --> d9["🏆 Select best model"]
+    d9 --> d10[(💾 Save model artifacts)]
+    d8 --> d11[(📊 Save evaluation CSV/plots)]
   end
 
-  subgraph ON["Online / Batch Inference Workflow"]
-    up["📤 CSV Upload"] --> iv["🔍 Input Read"]
-    iv --> ivd{"Expected columns?"}
-    ivd -->|No| e1["🚨 Prediction Error shown"]
-    ivd -->|Yes| tr1["🧹 preprocessor.transform"]
-    tr1 --> tr2["📏 scaler.transform"]
-    tr2 --> tr3["🧭 pca.transform"]
-    tr3 --> pred["🔮 best_model.predict"]
-    pred --> cls["🛡️ 0=Normal / 1=Attack"]
-    cls --> viz["📈 Table + Metrics + Pie Chart"]
+  subgraph ON["Online Batch Inference Flow (Streamlit)"]
+    direction LR
+    u0[(📤 User CSV)] --> u1["🔍 Read + trim column names"]
+    u1 --> u2{"Input usable?"}
+    u2 -->|No| uErr["🚨 st.error / st.warning"]
+    u2 -->|Yes| u3["🧩 Drop optional label\nDrop id, stcpb, dtcpb"]
+    u3 --> u4["🧹 preprocessor.transform"]
+    u4 --> u5["📏 scaler.transform"]
+    u5 --> u6["🧭 pca.transform"]
+    u6 --> u7["🔮 best_model.predict"]
+    u7 --> u8{"Pred classes ⊆ {0,1}?"}
+    u8 -->|No| uErr
+    u8 -->|Yes| u9["🛡️ Map 0=Normal, 1=Potential Attack"]
+    u9 --> u10["📈 Show table, metrics, pie, download"]
   end
 
-  art -. loaded at runtime .-> tr1
+  d10 -. artifacts loaded at runtime .-> u4
 
-  class d1,up,art data;
-  class v1,fs,drop,prep,bal,scl,red,iv,tr1,tr2,tr3 process;
-  class train,sel,pred model;
-  class rpt,viz,cls eval;
-  class e1 error;
-  class OFF,ON,ivd infra;
+  class d0,u0,d10,d11 data;
+  class d1,d2,d3,d4,d5,d6,d7,u1,u3,u4,u5,u6,u9,u10 process;
+  class d8,d9,u7,u8 model;
+  class uErr error;
+  class OFF,ON,u2 infra;

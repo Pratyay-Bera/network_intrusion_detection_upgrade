@@ -1,45 +1,46 @@
 flowchart LR
-  classDef data fill:#dbeafe,stroke:#2563eb,color:#1e3a8a;
-  classDef process fill:#ccfbf1,stroke:#0f766e,color:#134e4a;
-  classDef model fill:#ede9fe,stroke:#7c3aed,color:#4c1d95;
-  classDef eval fill:#fef3c7,stroke:#d97706,color:#92400e;
-  classDef error fill:#fee2e2,stroke:#dc2626,color:#7f1d1d;
-  classDef infra fill:#e5e7eb,stroke:#6b7280,color:#111827;
+  classDef data fill:#DBEAFE,stroke:#2563EB,color:#1E3A8A;
+  classDef process fill:#CCFBF1,stroke:#0F766E,color:#134E4A;
+  classDef model fill:#EDE9FE,stroke:#7C3AED,color:#4C1D95;
+  classDef eval fill:#FEF3C7,stroke:#D97706,color:#92400E;
+  classDef error fill:#FEE2E2,stroke:#DC2626,color:#7F1D1D;
+  classDef infra fill:#E5E7EB,stroke:#6B7280,color:#111827;
 
-  train["🧠 Tuned candidate models"] --> evalfn["📏 evaluate_model()"]
-  evalfn --> m1["Accuracy"]
-  evalfn --> m2["Precision (weighted)"]
-  evalfn --> m3["Recall (weighted)"]
-  evalfn --> m4["F1 (weighted)"]
-  evalfn --> m5["Macro F1"]
-  evalfn --> m6["Recall Attack (class 1)"]
-  evalfn --> m7["ROC-AUC (if probability available)"]
-  evalfn --> m8["Confusion Matrix + Classification Report"]
+  candidates["🧠 Tuned candidate models"] --> score["📏 evaluate_model(y_test, y_pred, y_prob)"]
+  score --> m1["Accuracy"]
+  score --> m2["Precision (weighted)"]
+  score --> m3["Recall (weighted)"]
+  score --> m4["F1 (weighted)"]
+  score --> m5["F1 (macro)"]
+  score --> m6["Recall Attack (class=1)"]
+  score --> m7["ROC-AUC (if available)"]
+  score --> m8["Confusion matrix + class report"]
 
-  m5 --> gate{"Selection Gate"}
+  m5 --> gate{"Selection gate\nmacro F1 >\nrecall_attack >\naccuracy"}
   m6 --> gate
   m1 --> gate
-  gate --> best["🏆 Best model"]
+
+  gate --> chosen["🏆 Best model"]
   gate --> others["Non-selected models"]
 
-  best --> store["💾 Serialize artifacts"]
-  others --> cmp["📊 model_comparison.csv"]
-  best --> cmp
+  chosen --> persist[("💾 Serialize 4 artifacts")]
+  chosen --> comp[("📊 model_comparison.csv")]
+  others --> comp
 
-  cmp --> analysis["🔎 Error/Trade-off analysis"]
+  comp --> analysis["🔎 Error/trade-off analysis\n(FN risk vs FP burden)"]
 
-  subgraph PROP["Proposed (not implemented)"]
-    drift["📉 Drift monitoring"]
-    retrain["♻️ Periodic retraining"]
-    fb["📝 Analyst feedback loop"]
+  subgraph PROPOSED["Proposed extensions (not implemented in current code)"]
+    drift["📉 Data drift monitoring"]
+    retrain["♻️ Scheduled retraining"]
+    feedback["📝 Analyst feedback incorporation"]
   end
 
   analysis -. proposed .-> drift
   drift -. proposed .-> retrain
-  fb -. proposed .-> retrain
+  feedback -. proposed .-> retrain
 
-  class train,best,others model;
-  class evalfn,analysis process;
-  class m1,m2,m3,m4,m5,m6,m7,m8,cmp,gate eval;
-  class store data;
-  class drift,retrain,fb infra;
+  class candidates,chosen,others model;
+  class score,analysis process;
+  class m1,m2,m3,m4,m5,m6,m7,m8,gate,comp eval;
+  class persist data;
+  class drift,retrain,feedback,PROPOSED infra;
