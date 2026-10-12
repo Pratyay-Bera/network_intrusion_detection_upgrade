@@ -1,0 +1,43 @@
+flowchart TB
+  classDef data fill:#dbeafe,stroke:#2563eb,color:#1e3a8a;
+  classDef process fill:#ccfbf1,stroke:#0f766e,color:#134e4a;
+  classDef model fill:#ede9fe,stroke:#7c3aed,color:#4c1d95;
+  classDef eval fill:#fef3c7,stroke:#d97706,color:#92400e;
+  classDef error fill:#fee2e2,stroke:#dc2626,color:#7f1d1d;
+  classDef infra fill:#e5e7eb,stroke:#6b7280,color:#111827;
+
+  start(["Start: src/train_models.py"]) --> load["📄 Load train/test CSV"]
+  load --> split["🧩 X_train_raw, y_train, X_test_raw, y_test"]
+  split --> drop["🗑️ Drop id/stcpb/dtcpb from features"]
+  drop --> prep["🧹 Fit ColumnTransformer on train\nTransform train + test"]
+  prep --> smote["⚖️ SMOTE on transformed train only"]
+  smote --> scale["📏 Fit StandardScaler on SMOTE-train\nTransform train + test"]
+  scale --> featimp["📌 Train RandomForest for feature importance plot\n(using pre-SMOTE labels)"]
+  scale --> pca["🧭 Fit PCA(20) on scaled train\nTransform train + test"]
+
+  pca --> loop["🔁 For each candidate model"]
+  loop --> cv10["10-fold cross_val_score"]
+  cv10 --> grid5["GridSearchCV (cv=5)"]
+  grid5 --> testeval["🧪 Predict on test + evaluate_model()"]
+  testeval --> collect["Append metrics to results"]
+  collect --> best{"Better by\nMacro F1, then Recall Attack, then Accuracy?"}
+  best -->|Yes| keep["Update best_model"]
+  best -->|No| loop
+  keep --> loop
+
+  loop --> savecsv["📝 Save data/model_comparison.csv"]
+  savecsv --> saveplots["🖼️ Save outputs/*.png"]
+  saveplots --> dump["💾 joblib.dump best_model, preprocessor, scaler, pca"]
+  dump --> done(["Done"])
+
+  note1["Leakage prevention present:\nfit transform objects on training split before test transform"]
+  note2["Current CV is run after global SMOTE/PCA on train set;\nnot fold-local pipeline (documented limitation)"]
+
+  prep -.-> note1
+  cv10 -.-> note2
+
+  class start,done infra;
+  class load,split data;
+  class drop,prep,smote,scale,featimp,pca,loop,cv10,grid5,testeval,collect,keep,savecsv,saveplots process;
+  class best model;
+  class note1,note2 eval;
