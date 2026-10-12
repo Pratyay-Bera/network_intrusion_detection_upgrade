@@ -37,20 +37,27 @@ ARTIFACT_NAMES = [
 ]
 
 # ------------------------- CSS --------------------------------
+# PALETTE: Teal primary on a neutral warm-stone base.
+#   Primary      #0f766e (teal)      Primary dark  #134e4a (deep teal)
+#   Success      #16a34a (green)     Danger        #e11d48 (rose)
+#   Warning      #ea580c (orange)    Info          #0284c7 (sky)
+#   Violet       #4f46e5 (indigo)    Cyan          #0891b2
+#   Background   #f7f7f5             Surface       #ffffff
+#   Text         #44403c             Heading       #1c1917
 st.markdown(
     """
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
 
 :root {
-  --primary:#1d4ed8; --primary-dark:#1e3a8a; --primary-soft:#eff4ff;
-  --green:#059669; --green-soft:#ecfdf5;
-  --red:#dc2626; --red-soft:#fef2f2;
-  --amber:#d97706; --purple:#7c3aed; --teal:#0d9488; --blue:#2563eb;
-  --bg:#f6f8fb; --surface:#ffffff; --surface2:#f1f5f9;
-  --border:#e2e8f0; --border2:#cbd5e1;
-  --text:#334155; --heading:#0f172a; --muted:#94a3b8; --muted2:#64748b;
-  --shadow:0 1px 2px rgba(15,23,42,.05),0 4px 14px rgba(15,23,42,.05);
+  --primary:#0f766e; --primary-dark:#134e4a; --primary-soft:#f0fdfa;
+  --green:#16a34a; --green-soft:#f0fdf4;
+  --red:#e11d48; --red-soft:#fff1f2;
+  --amber:#ea580c; --purple:#4f46e5; --teal:#0891b2; --blue:#0284c7;
+  --bg:#f7f7f5; --surface:#ffffff; --surface2:#f5f5f4;
+  --border:#e7e5e4; --border2:#d6d3d1;
+  --text:#44403c; --heading:#1c1917; --muted:#a8a29e; --muted2:#78716c;
+  --shadow:0 1px 2px rgba(28,25,23,.05),0 4px 14px rgba(28,25,23,.05);
 }
 *,*::before,*::after { box-sizing:border-box; }
 html,body,[data-testid="stAppViewContainer"],[data-testid="stMain"],.stApp {
@@ -93,7 +100,7 @@ div[data-testid="stAlert"] { border-radius:8px; }
 }
 .stButton>button:hover,.stDownloadButton>button:hover {
   background:var(--primary-dark)!important; border-color:var(--primary-dark)!important;
-  box-shadow:0 6px 16px rgba(29,78,216,.25); transform:translateY(-1px); color:#fff!important;
+  box-shadow:0 6px 16px rgba(15,118,110,.25); transform:translateY(-1px); color:#fff!important;
 }
 .stDownloadButton>button p,.stButton>button p { color:#fff!important; }
 [data-testid="stSelectbox"] label p,[data-testid="stFileUploader"] label p {
@@ -115,38 +122,38 @@ code,pre { font-family:'JetBrains Mono',monospace!important; }
  font:500 11px 'Inter',sans-serif;border-right:1px solid rgba(255,255,255,.14);}
 .ticker-item .symbol {color:rgba(255,255,255,.6);letter-spacing:.08em;font-weight:500;}
 .ticker-item .value {color:#ffffff;font-weight:600;}
-.ticker-item .green {color:#6ee7b7;}
-.ticker-item .blue {color:#93c5fd;}
-.ticker-item .purple {color:#c4b5fd;}
-.ticker-item .red {color:#fca5a5;}
+.ticker-item .green {color:#86efac;}
+.ticker-item .blue {color:#7dd3fc;}
+.ticker-item .purple {color:#a5b4fc;}
+.ticker-item .red {color:#fda4af;}
 @keyframes tickerMove {from{transform:translateX(0)}to{transform:translateX(-50%)}}
 
 /* Navigation and hero */
 .navbar {position:relative;z-index:5;display:flex;align-items:center;justify-content:space-between;
  padding:16px 28px;margin:0 -2rem;background:var(--surface);border-bottom:1px solid var(--border);
- box-shadow:0 1px 3px rgba(15,23,42,.04);}
+ box-shadow:0 1px 3px rgba(28,25,23,.04);}
 .brand {font:800 19px 'Inter',sans-serif;letter-spacing:.02em;color:var(--heading);text-transform:uppercase;}
 .brand span {color:var(--primary);}
 .nav-meta {font:500 11px 'Inter',sans-serif;letter-spacing:.12em;color:var(--muted2);text-transform:uppercase;}
-.nav-chip {border:1px solid #bfd0fb;padding:7px 14px;color:var(--primary);border-radius:999px;
+.nav-chip {border:1px solid #99d6cf;padding:7px 14px;color:var(--primary);border-radius:999px;
  background:var(--primary-soft);font:600 11px 'Inter',sans-serif;letter-spacing:.06em;}
 .hero {position:relative;z-index:2;text-align:center;padding:72px 5% 56px;margin:0 -2rem;
- background:linear-gradient(180deg,#ffffff 0%,#eef3fc 100%);border-bottom:1px solid var(--border);
+ background:linear-gradient(180deg,#ffffff 0%,#e9f6f4 100%);border-bottom:1px solid var(--border);
  animation:fadeUp .7s ease both;}
 .eyebrow {display:inline-flex;align-items:center;gap:12px;color:var(--primary);
  font:600 11px 'Inter',sans-serif;letter-spacing:.2em;text-transform:uppercase;margin-bottom:22px;}
 .eyebrow:before,.eyebrow:after {content:'';height:2px;width:26px;background:var(--primary);border-radius:2px;}
 .hero-title {font:800 clamp(38px,6vw,68px)/1.05 'Inter',sans-serif;color:var(--heading);letter-spacing:-.035em;}
-.hero-title .accent {background:linear-gradient(100deg,#1d4ed8,#0ea5e9);
+.hero-title .accent {background:linear-gradient(100deg,#0f766e,#14b8a6);
  -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;}
 .hero-sub {max-width:700px;margin:22px auto 0;color:var(--muted2);
  font-size:16px;line-height:1.75;font-weight:400;}
 .hero-badges {display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:28px;}
 .hero-badge {font:600 11px 'Inter',sans-serif;letter-spacing:.05em;padding:8px 14px;
  border:1px solid var(--border2);border-radius:999px;background:var(--surface);}
-.badge-green {color:var(--green);border-color:#a7f3d0;background:var(--green-soft);}
-.badge-blue {color:var(--blue);border-color:#bfdbfe;background:#eff6ff;}
-.badge-purple {color:var(--purple);border-color:#ddd6fe;background:#f5f3ff;}
+.badge-green {color:var(--green);border-color:#bbf7d0;background:var(--green-soft);}
+.badge-blue {color:var(--blue);border-color:#bae6fd;background:#f0f9ff;}
+.badge-purple {color:var(--purple);border-color:#c7d2fe;background:#eef2ff;}
 .pulse-dot {display:inline-block;width:7px;height:7px;background:var(--green);border-radius:50%;
  margin-right:7px;animation:pulse 1.8s infinite;}
 @keyframes pulse {50%{opacity:.35}}
@@ -161,7 +168,7 @@ code,pre { font-family:'JetBrains Mono',monospace!important; }
 .module-card {position:relative;min-height:220px;overflow:hidden;background:var(--surface);
  border:1px solid var(--border);border-radius:12px;box-shadow:var(--shadow);
  padding:24px 24px 20px;transition:box-shadow .25s,transform .25s,border-color .25s;}
-.module-card:hover {transform:translateY(-3px);box-shadow:0 10px 28px rgba(15,23,42,.10);border-color:var(--accent);}
+.module-card:hover {transform:translateY(-3px);box-shadow:0 10px 28px rgba(28,25,23,.10);border-color:var(--accent);}
 .module-card:after {content:'';position:absolute;top:0;left:0;width:100%;height:3px;background:var(--accent);}
 .card-top {display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;}
 .card-index {color:var(--muted);font:600 11px 'Inter',sans-serif;letter-spacing:.1em;}
@@ -175,7 +182,7 @@ code,pre { font-family:'JetBrains Mono',monospace!important; }
 .card-tag {font:600 10px 'Inter',sans-serif;color:var(--muted2);background:var(--surface2);
  border:1px solid var(--border);padding:4px 9px;border-radius:6px;letter-spacing:.04em;}
 .card-number {position:absolute;bottom:-26px;right:12px;font:800 100px 'Inter',sans-serif;
- color:rgba(15,23,42,.035);pointer-events:none;}
+ color:rgba(28,25,23,.035);pointer-events:none;}
 .stats-bar {position:relative;z-index:2;display:grid;grid-template-columns:repeat(4,1fr);
  margin:24px 0 0;border:1px solid var(--border);background:var(--surface);border-radius:12px;box-shadow:var(--shadow);}
 .stat-item {padding:22px 12px;text-align:center;border-right:1px solid var(--border);}
@@ -185,21 +192,21 @@ code,pre { font-family:'JetBrains Mono',monospace!important; }
 .content-wrap {position:relative;z-index:2;margin:0;}
 .panel {border:1px solid var(--border);background:var(--surface);padding:22px;margin-bottom:16px;
  border-radius:12px;box-shadow:var(--shadow);}
-.info-card {border:1px solid #a7f3d0;background:var(--green-soft);border-radius:10px;padding:12px 14px;}
+.info-card {border:1px solid #99d6cf;background:var(--primary-soft);border-radius:10px;padding:12px 14px;}
 .panel-title {font:700 15px 'Inter',sans-serif;color:var(--heading);margin-bottom:6px;letter-spacing:.01em;}
 .panel-subtitle {font:500 11px 'Inter',sans-serif;color:var(--muted2);letter-spacing:.06em;margin-bottom:16px;text-transform:uppercase;}
 .small-note {font:400 12px 'Inter',sans-serif;color:var(--muted2);line-height:1.7;}
-.disclaimer {position:relative;z-index:2;margin:44px 0 0;border:1px solid #fecaca;
+.disclaimer {position:relative;z-index:2;margin:44px 0 0;border:1px solid #fecdd3;
  border-left:5px solid var(--red);background:var(--red-soft);padding:22px 26px;border-radius:10px;}
-.disclaimer-heading {font:700 13px 'Inter',sans-serif;letter-spacing:.06em;color:#b91c1c;margin-bottom:10px;}
-.disclaimer-text {font-size:13px;line-height:1.8;color:#475569;}
+.disclaimer-heading {font:700 13px 'Inter',sans-serif;letter-spacing:.06em;color:#be123c;margin-bottom:10px;}
+.disclaimer-text {font-size:13px;line-height:1.8;color:#57534e;}
 .disclaimer-tags {display:flex;gap:8px;flex-wrap:wrap;margin-top:14px;}
-.disclaimer-tag {font:600 10px 'Inter',sans-serif;padding:5px 10px;border:1px solid #fecaca;
- color:#b91c1c;background:#fff;border-radius:999px;letter-spacing:.04em;}
+.disclaimer-tag {font:600 10px 'Inter',sans-serif;padding:5px 10px;border:1px solid #fecdd3;
+ color:#be123c;background:#fff;border-radius:999px;letter-spacing:.04em;}
 .footer {position:relative;z-index:2;text-align:center;padding:30px 5%;margin:36px -2rem -1.5rem;
  background:var(--primary-dark);}
 .footer-brand {font:800 14px 'Inter',sans-serif;letter-spacing:.1em;color:#ffffff;}
-.footer-brand span {color:#93c5fd;}
+.footer-brand span {color:#5eead4;}
 .footer-note {font:500 10px 'Inter',sans-serif;letter-spacing:.1em;color:rgba(255,255,255,.6);margin-top:9px;}
 
 @media(max-width:950px) {
@@ -252,7 +259,7 @@ st.markdown(
 <div class="hero">
   <div class="eyebrow">Network Security · Machine Learning</div>
   <div class="hero-title">TRAFFIC,<br><span class="accent">DECODED.</span></div>
-  <p class="hero-sub">
+  <p class="hero-sub" style="text-align: center; max-width: 900px; width: 100%; margin: 22px auto 0;">
     Analyze network flow records, identify potentially malicious traffic,
     and inspect model outputs through one unified intrusion intelligence dashboard.
     Built for educational research and preliminary analysis.
@@ -276,22 +283,22 @@ st.markdown(
 modules = [
     ("01", "🧠", "Traffic Classification",
      "Apply the saved preprocessing pipeline, scaler, PCA transformation, and XGBoost classifier.",
-     "MODEL INFERENCE", "#1d4ed8", ["XGBOOST", "PREDICTION"]),
+     "MODEL INFERENCE", "#0f766e", ["XGBOOST", "PREDICTION"]),
     ("02", "📂", "CSV Intake",
      "Upload a network traffic dataset and preview records before running the model.",
      "DATA INPUT", "#0284c7", ["CSV", "VALIDATION"]),
     ("03", "🚨", "Threat Summary",
      "Review normal and potential attack counts, percentages, and individual predictions.",
-     "CLASSIFICATION", "#dc2626", ["NORMAL", "ATTACK"]),
+     "CLASSIFICATION", "#e11d48", ["NORMAL", "ATTACK"]),
     ("04", "📊", "Traffic Analytics",
      "Explore class distribution charts and export prediction results for further review.",
-     "VISUALIZATION", "#7c3aed", ["CHARTS", "EXPORT"]),
+     "VISUALIZATION", "#4f46e5", ["CHARTS", "EXPORT"]),
     ("05", "🧪", "Model Evaluation",
      "Compare predictions against supplied ground-truth labels when valid binary labels are available.",
-     "OPTIONAL", "#d97706", ["METRICS", "CONFUSION MATRIX"]),
+     "OPTIONAL", "#ea580c", ["METRICS", "CONFUSION MATRIX"]),
     ("06", "🗂️", "Training Insights",
      "View saved training-time visualizations for SMOTE, feature importance, correlation, and model comparison.",
-     "ARTIFACTS", "#0d9488", ["SMOTE", "FEATURES"]),
+     "ARTIFACTS", "#0891b2", ["SMOTE", "FEATURES"]),
 ]
 cards = "".join(
     dedent(f"""
@@ -416,9 +423,9 @@ with right:
         for col, filename in zip(status_cols, ARTIFACT_NAMES):
             col.markdown(
                 f'<div class="info-card"><div class="small-note">ARTIFACT</div>'
-                f'<div style="color:#0f172a;font-family:JetBrains Mono,monospace;font-weight:500;'
+                f'<div style="color:#1c1917;font-family:JetBrains Mono,monospace;font-weight:500;'
                 f'font-size:11px;margin-top:8px;overflow-wrap:anywhere;">'
-                f'{filename}</div><div style="color:#059669;font-weight:600;font-size:11px;margin-top:8px;">'
+                f'{filename}</div><div style="color:#0f766e;font-weight:600;font-size:11px;margin-top:8px;">'
                 f'● FOUND</div></div>',
                 unsafe_allow_html=True,
             )
@@ -569,8 +576,8 @@ if uploaded_file is not None:
                             labels=["Normal", "Potential Attack"],
                             autopct="%1.1f%%",
                             startangle=90,
-                            colors=["#10b981", "#ef4444"],
-                            textprops={"color": "#1e293b", "fontsize": 10},
+                            colors=["#14b8a6", "#f43f5e"],
+                            textprops={"color": "#292524", "fontsize": 10},
                             wedgeprops={"edgecolor": "#ffffff", "linewidth": 2},
                         )
                         ax.axis("equal")
@@ -581,15 +588,15 @@ if uploaded_file is not None:
                         st.markdown(
                             f"""
                             <div class="panel">
-                              <div style="color:#059669;font:700 11px Inter,sans-serif;
+                              <div style="color:#0f766e;font:700 11px Inter,sans-serif;
                               letter-spacing:.1em;">NORMAL TRAFFIC</div>
-                              <div style="font:800 32px Inter,sans-serif;color:#0f172a;margin:5px 0;">
+                              <div style="font:800 32px Inter,sans-serif;color:#1c1917;margin:5px 0;">
                               {normal_count:,}</div>
                               <div class="small-note">{normal_pct:.2f}% of uploaded records</div>
                               <hr>
-                              <div style="color:#dc2626;font:700 11px Inter,sans-serif;
+                              <div style="color:#e11d48;font:700 11px Inter,sans-serif;
                               letter-spacing:.1em;">POTENTIAL ATTACKS</div>
-                              <div style="font:800 32px Inter,sans-serif;color:#0f172a;margin:5px 0;">
+                              <div style="font:800 32px Inter,sans-serif;color:#1c1917;margin:5px 0;">
                               {attack_count:,}</div>
                               <div class="small-note">{attack_pct:.2f}% of uploaded records</div>
                             </div>
@@ -710,7 +717,7 @@ st.markdown(
     This application provides machine-learning-based network traffic predictions for
     educational, research, and preliminary analysis purposes only. Predictions may be
     inaccurate and can produce both false positives and false negatives.
-    <strong style="color:#b91c1c">Do not blindly trust or rely solely on these predictions</strong>
+    <strong style="color:#be123c">Do not blindly trust or rely solely on these predictions</strong>
     for cybersecurity decisions, incident response, or critical actions. Independently
     verify findings using trusted security tools and qualified security professionals.
     No guarantee is made regarding the accuracy, completeness, or reliability of the
