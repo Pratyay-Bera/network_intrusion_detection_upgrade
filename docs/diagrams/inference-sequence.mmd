@@ -1,0 +1,29 @@
+sequenceDiagram
+  autonumber
+  participant U as 👤 User
+  participant S as 🖥️ Streamlit UI (src/app.py)
+  participant V as 🔍 Input Reader/Validator
+  participant P as 🧹 Preprocessor Artifact
+  participant C as 📏 Scaler + 🧭 PCA Artifacts
+  participant M as 🧠 best_model.pkl
+  participant R as 📊 Result Views
+
+  U->>S: Upload CSV file
+  S->>V: pd.read_csv(uploaded_file)
+  alt CSV parse or schema issue
+    V-->>S: Exception / mismatched columns
+    S-->>U: st.error("Prediction Error: ...")
+  else CSV loaded
+    V-->>S: DataFrame
+    S->>V: Drop " label " if present; drop id/stcpb/dtcpb if present
+    S->>P: preprocessor.transform(X)
+    P-->>S: Encoded matrix
+    S->>C: scaler.transform()
+    C-->>S: Scaled matrix
+    S->>C: pca.transform()
+    C-->>S: PCA matrix
+    S->>M: predict(X_pca)
+    M-->>S: 0/1 predictions
+    S->>R: Build results table + counts + pie chart
+    R-->>U: Prediction dataframe and dashboard metrics
+  end

@@ -1,0 +1,69 @@
+flowchart LR
+  classDef data fill:#dbeafe,stroke:#2563eb,color:#1e3a8a;
+  classDef process fill:#ccfbf1,stroke:#0f766e,color:#134e4a;
+  classDef model fill:#ede9fe,stroke:#7c3aed,color:#4c1d95;
+  classDef eval fill:#fef3c7,stroke:#d97706,color:#92400e;
+  classDef error fill:#fee2e2,stroke:#dc2626,color:#7f1d1d;
+  classDef infra fill:#e5e7eb,stroke:#6b7280,color:#111827;
+
+  subgraph SRC["src/"]
+    train["train_models.py"]
+    app["app.py"]
+    prepmod["data_preprocessing.py"]
+    featmod["feature_engineering.py"]
+    evalmod["evaluate.py"]
+  end
+
+  subgraph DATA["data/"]
+    tr[(UNSW_NB15_training-set_updated.csv)]
+    te[(UNSW_NB15_testing-set_updated.csv)]
+    cmp[(model_comparison.csv)]
+  end
+
+  subgraph OUT["outputs/"]
+    b[(before_smote.png)]
+    a[(after_smote.png)]
+    h[(correlation_heatmap.png)]
+    f[(feature_importance.png)]
+    mcmp[(model_comparison.png)]
+  end
+
+  subgraph MOD["models/"]
+    bm[(best_model.pkl)]
+    pr[(preprocessor.pkl)]
+    sc[(scaler.pkl)]
+    pc[(pca.pkl)]
+  end
+
+  tr --> train
+  te --> train
+  prepmod --> train
+  featmod --> train
+  evalmod --> train
+
+  train --> cmp
+  train --> b
+  train --> a
+  train --> h
+  train --> f
+  train --> mcmp
+  train --> bm
+  train --> pr
+  train --> sc
+  train --> pc
+
+  bm --> app
+  pr --> app
+  sc --> app
+  pc --> app
+  cmp --> app
+  b --> app
+  a --> app
+  h --> app
+  f --> app
+  mcmp --> app
+
+  class tr,te,cmp,b,a,h,f,mcmp data;
+  class prepmod,featmod,evalmod,train,app process;
+  class bm,pr,sc,pc model;
+  class SRC,DATA,OUT,MOD infra;

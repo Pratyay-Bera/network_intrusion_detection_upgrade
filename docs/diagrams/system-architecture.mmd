@@ -1,0 +1,73 @@
+flowchart LR
+  %% Classes
+  classDef data fill:#dbeafe,stroke:#2563eb,color:#1e3a8a,stroke-width:1px;
+  classDef process fill:#ccfbf1,stroke:#0f766e,color:#134e4a,stroke-width:1px;
+  classDef model fill:#ede9fe,stroke:#7c3aed,color:#4c1d95,stroke-width:1px;
+  classDef eval fill:#fef3c7,stroke:#d97706,color:#92400e,stroke-width:1px;
+  classDef error fill:#fee2e2,stroke:#dc2626,color:#7f1d1d,stroke-width:1px;
+  classDef infra fill:#e5e7eb,stroke:#6b7280,color:#111827,stroke-width:1px;
+
+  subgraph DL["Data Layer"]
+    train[(📄 UNSW_NB15_training-set_updated.csv)]
+    test[(📄 UNSW_NB15_testing-set_updated.csv)]
+    upload[(📤 User CSV Upload)]
+  end
+
+  subgraph PL["Processing Layer"]
+    prep["🧹 ColumnTransformer\n(num passthrough + OHE)"]
+    smote["⚖️ SMOTE (train only)"]
+    scale["📏 StandardScaler"]
+    pca["🧭 PCA (20 components)"]
+  end
+
+  subgraph ML["Machine Learning Layer"]
+    models["🧠 Candidate Models (8)"]
+    tune["🔧 CV + GridSearchCV"]
+    select["🏆 Best Model Selection\n(Macro F1 → Recall Attack → Accuracy)"]
+    infer["🔮 Predict 0/1"]
+  end
+
+  subgraph AS["Artifact Storage Layer"]
+    m1[(💾 models/best_model.pkl)]
+    m2[(💾 models/preprocessor.pkl)]
+    m3[(💾 models/scaler.pkl)]
+    m4[(💾 models/pca.pkl)]
+    comp[(📊 data/model_comparison.csv)]
+    imgs[(🖼️ outputs/*.png)]
+  end
+
+  subgraph AP["Application & Presentation Layer"]
+    app["🖥️ Streamlit: src/app.py"]
+    table["📋 Prediction Table"]
+    stats["📈 Normal vs Attack Metrics"]
+    pie["🥧 Traffic Distribution"]
+    err["🚨 st.error on transform/predict failure"]
+  end
+
+  train --> prep
+  test --> prep
+  prep --> smote --> scale --> pca --> models --> tune --> select
+  select --> m1
+  prep --> m2
+  scale --> m3
+  pca --> m4
+  tune --> comp
+  tune --> imgs
+
+  upload --> app
+  m1 --> app
+  m2 --> app
+  m3 --> app
+  m4 --> app
+
+  app --> infer --> table
+  infer --> stats
+  infer --> pie
+  app --> err
+
+  class train,test,upload data;
+  class prep,smote,scale,pca,app process;
+  class models,tune,select,infer,m1,m2,m3,m4 model;
+  class comp,imgs,table,stats,pie eval;
+  class err error;
+  class DL,PL,ML,AS,AP infra;
