@@ -1,69 +1,69 @@
 flowchart LR
-  classDef data fill:#dbeafe,stroke:#2563eb,color:#1e3a8a;
-  classDef process fill:#ccfbf1,stroke:#0f766e,color:#134e4a;
-  classDef model fill:#ede9fe,stroke:#7c3aed,color:#4c1d95;
-  classDef eval fill:#fef3c7,stroke:#d97706,color:#92400e;
-  classDef error fill:#fee2e2,stroke:#dc2626,color:#7f1d1d;
-  classDef infra fill:#e5e7eb,stroke:#6b7280,color:#111827;
+  classDef data fill:#DBEAFE,stroke:#2563EB,color:#1E3A8A;
+  classDef process fill:#CCFBF1,stroke:#0F766E,color:#134E4A;
+  classDef model fill:#EDE9FE,stroke:#7C3AED,color:#4C1D95;
+  classDef eval fill:#FEF3C7,stroke:#D97706,color:#92400E;
+  classDef error fill:#FEE2E2,stroke:#DC2626,color:#7F1D1D;
+  classDef infra fill:#E5E7EB,stroke:#6B7280,color:#111827;
 
   subgraph SRC["src/"]
     train["train_models.py"]
+    dp["data_preprocessing.py"]
+    fe["feature_engineering.py"]
+    ev["evaluate.py"]
     app["app.py"]
-    prepmod["data_preprocessing.py"]
-    featmod["feature_engineering.py"]
-    evalmod["evaluate.py"]
   end
 
   subgraph DATA["data/"]
     tr[(UNSW_NB15_training-set_updated.csv)]
     te[(UNSW_NB15_testing-set_updated.csv)]
-    cmp[(model_comparison.csv)]
-  end
-
-  subgraph OUT["outputs/"]
-    b[(before_smote.png)]
-    a[(after_smote.png)]
-    h[(correlation_heatmap.png)]
-    f[(feature_importance.png)]
-    mcmp[(model_comparison.png)]
+    comp[(model_comparison.csv)]
   end
 
   subgraph MOD["models/"]
-    bm[(best_model.pkl)]
-    pr[(preprocessor.pkl)]
-    sc[(scaler.pkl)]
-    pc[(pca.pkl)]
+    mBest[(best_model.pkl)]
+    mPrep[(preprocessor.pkl)]
+    mScale[(scaler.pkl)]
+    mPca[(pca.pkl)]
   end
 
-  tr --> train
-  te --> train
-  prepmod --> train
-  featmod --> train
-  evalmod --> train
+  subgraph OUT["outputs/"]
+    o1[(before_smote.png)]
+    o2[(after_smote.png)]
+    o3[(correlation_heatmap.png)]
+    o4[(feature_importance.png)]
+    o5[(model_comparison.png)]
+  end
 
-  train --> cmp
-  train --> b
-  train --> a
-  train --> h
-  train --> f
-  train --> mcmp
-  train --> bm
-  train --> pr
-  train --> sc
-  train --> pc
+  tr -->|load_data| train
+  te -->|load_data| train
 
-  bm --> app
-  pr --> app
-  sc --> app
-  pc --> app
-  cmp --> app
-  b --> app
-  a --> app
-  h --> app
-  f --> app
-  mcmp --> app
+  dp -->|load_data, preprocess_features, apply_smote, scale_features| train
+  fe -->|correlation_heatmap, feature_importance, apply_pca| train
+  ev -->|evaluate_model| train
 
-  class tr,te,cmp,b,a,h,f,mcmp data;
-  class prepmod,featmod,evalmod,train,app process;
-  class bm,pr,sc,pc model;
-  class SRC,DATA,OUT,MOD infra;
+  train --> comp
+  train --> mBest
+  train --> mPrep
+  train --> mScale
+  train --> mPca
+  train --> o1
+  train --> o2
+  train --> o3
+  train --> o4
+  train --> o5
+
+  mBest -->|joblib.load| app
+  mPrep -->|joblib.load| app
+  mScale -->|joblib.load| app
+  mPca -->|joblib.load| app
+  o1 -->|display if present| app
+  o2 -->|display if present| app
+  o3 -->|display if present| app
+  o4 -->|display if present| app
+  o5 -->|display if present| app
+
+  class tr,te,comp,o1,o2,o3,o4,o5 data;
+  class train,dp,fe,ev,app process;
+  class mBest,mPrep,mScale,mPca model;
+  class SRC,DATA,MOD,OUT infra;

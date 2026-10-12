@@ -1,29 +1,48 @@
 sequenceDiagram
   autonumber
   participant U as 👤 User
-  participant S as 🖥️ Streamlit UI (src/app.py)
-  participant V as 🔍 Input Reader/Validator
-  participant P as 🧹 Preprocessor Artifact
-  participant C as 📏 Scaler + 🧭 PCA Artifacts
+  participant S as 🖥️ Streamlit (src/app.py)
+  participant V as 🔍 Input checks
+  participant P as 🧹 preprocessor.pkl
+  participant SC as 📏 scaler.pkl
+  participant PC as 🧭 pca.pkl
   participant M as 🧠 best_model.pkl
-  participant R as 📊 Result Views
+  participant R as 📊 Result renderer
 
-  U->>S: Upload CSV file
-  S->>V: pd.read_csv(uploaded_file)
-  alt CSV parse or schema issue
-    V-->>S: Exception / mismatched columns
-    S-->>U: st.error("Prediction Error: ...")
-  else CSV loaded
+  U->>S: Upload CSV
+  S->>V: pd.read_csv(file)
+
+  alt CSV unreadable / empty / duplicate columns
+    V-->>S: Validation failure
+    S-->>U: st.error / st.warning
+  else CSV accepted
     V-->>S: DataFrame
-    S->>V: Drop " label " if present; drop id/stcpb/dtcpb if present
-    S->>P: preprocessor.transform(X)
-    P-->>S: Encoded matrix
-    S->>C: scaler.transform()
-    C-->>S: Scaled matrix
-    S->>C: pca.transform()
-    C-->>S: PCA matrix
-    S->>M: predict(X_pca)
-    M-->>S: 0/1 predictions
-    S->>R: Build results table + counts + pie chart
-    R-->>U: Prediction dataframe and dashboard metrics
+    S->>V: strip column names
+    S->>V: drop optional label, id, stcpb, dtcpb
+
+    alt No remaining feature columns
+      V-->>S: Invalid feature set
+      S-->>U: st.error("No feature columns remain...")
+    else Feature matrix ready
+      S->>P: transform(X)
+      P-->>S: Encoded matrix
+      S->>SC: transform(X_processed)
+      SC-->>S: Scaled matrix
+      S->>PC: transform(X_scaled)
+      PC-->>S: PCA matrix
+      S->>M: predict(X_pca)
+      M-->>S: Class labels
+
+      alt Non-binary class labels
+        S-->>U: st.error("Unexpected model classes...")
+      else Binary class labels (0/1)
+        S->>R: Build Prediction Code + Prediction
+        R-->>U: Table + counts + pie chart + download CSV
+      end
+    end
+  end
+
+  opt Uploaded file includes trusted label column
+    S->>R: Compute accuracy, macro F1, attack recall, confusion matrix
+    R-->>U: Optional ground-truth evaluation panel
   end
