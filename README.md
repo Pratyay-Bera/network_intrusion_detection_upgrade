@@ -12,43 +12,30 @@ The deployed system classifies network traffic into:
 ## Data Flow Diagram
 
 ```mermaid
-flowchart LR
-    A[UNSW-NB15 Training Data] --> B[Data Loader]
-    C[UNSW-NB15 Testing Data] --> B
-
-    B --> D[Feature Cleaning]
-    D --> D1[Drop id, stcpb, dtcpb]
-    D1 --> E[Preprocessing Pipeline]
-    E --> E1[One-Hot Encoding for categorical features]
-    E1 --> F[SMOTE Oversampling]
-    F --> G[StandardScaler]
-    G --> H[PCA Dimensionality Reduction]
-
-    H --> I[Train 8 Classifiers]
-    I --> J[10-Fold Cross-Validation]
-    J --> K[GridSearchCV Hyperparameter Tuning]
-    K --> L[Model Evaluation]
-    L --> L1[Accuracy, Precision, Recall, F1, Macro F1, Attack Recall, ROC-AUC]
-    L1 --> M[Best Model Selection]
-    M --> N[Persist Artifacts]
-    N --> N1[best_model.pkl]
-    N --> N2[preprocessor.pkl]
-    N --> N3[scaler.pkl]
-    N --> N4[pca.pkl]
-
-    O[New Network Traffic CSV] --> P[Streamlit Dashboard]
-    P --> Q[Load Saved Model + Pipeline]
-    Q --> R[Transform-Only Preprocessing]
-    R --> S[Scale + PCA]
-    S --> T[Prediction Engine]
-    T --> U[Normal / Attack Classification]
-    U --> V[Metric Summary + Visual Insights]
-
-    M --> P
-    V --> W[Operational Decision Support]
+graph LR
+    A["📊 Raw Data\n(UNSW-NB15)"] --> B["🔧 Preprocessing\n(Encode, Drop cols)"]
+    B --> C["⚖️ SMOTE\n(Balance)"]
+    C --> D["📈 Scale & PCA\n(20 components)"]
+    D --> E["🤖 8 Classifiers\n(CV + Tune)"]
+    E --> F["🏆 Best Model\n(XGBoost)"]
+    F --> G["💾 Persist\n(Joblib)"]
+    
+    H["📤 New Traffic\nCSV"] --> I["📥 Load Pipeline"]
+    I --> J["🔄 Transform\n(Preprocessor)"]
+    J --> K["📊 Scale & PCA"]
+    K --> L["🧠 Predict\n(XGBoost)"]
+    L --> M["📊 Dashboard\n(Streamlit)"]
+    
+    G -.->|best_model.pkl| I
+    G -.->|scaler.pkl| K
+    G -.->|pca.pkl| K
+    G -.->|preprocessor.pkl| J
 ```
 
-This end-to-end pipeline ensures that the data is transformed consistently during training and inference, keeping the preprocessing steps reproducible and preventing information leakage from the test set.
+**Training Phase** (left): Data loading → Preprocessing → Balancing → Scaling & Dimensionality Reduction → Model Training & Tuning → Best Model Persistence  
+**Inference Phase** (right): New Data → Transform-Only Pipeline → Prediction → Visual Insights
+
+---
 
 ## Features
 
@@ -352,4 +339,3 @@ These visualizations are also displayed directly within the Streamlit dashboard.
 ## Objective
 
 The primary objective of this project is to develop a reliable machine learning-based intrusion detection system capable of distinguishing **normal network traffic from malicious attack traffic** while maintaining strong detection performance and operational interpretability.
-
