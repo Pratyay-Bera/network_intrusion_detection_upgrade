@@ -1,0 +1,45 @@
+flowchart LR
+  classDef data fill:#dbeafe,stroke:#2563eb,color:#1e3a8a;
+  classDef process fill:#ccfbf1,stroke:#0f766e,color:#134e4a;
+  classDef model fill:#ede9fe,stroke:#7c3aed,color:#4c1d95;
+  classDef eval fill:#fef3c7,stroke:#d97706,color:#92400e;
+  classDef error fill:#fee2e2,stroke:#dc2626,color:#7f1d1d;
+  classDef infra fill:#e5e7eb,stroke:#6b7280,color:#111827;
+
+  train["🧠 Tuned candidate models"] --> evalfn["📏 evaluate_model()"]
+  evalfn --> m1["Accuracy"]
+  evalfn --> m2["Precision (weighted)"]
+  evalfn --> m3["Recall (weighted)"]
+  evalfn --> m4["F1 (weighted)"]
+  evalfn --> m5["Macro F1"]
+  evalfn --> m6["Recall Attack (class 1)"]
+  evalfn --> m7["ROC-AUC (if probability available)"]
+  evalfn --> m8["Confusion Matrix + Classification Report"]
+
+  m5 --> gate{"Selection Gate"}
+  m6 --> gate
+  m1 --> gate
+  gate --> best["🏆 Best model"]
+  gate --> others["Non-selected models"]
+
+  best --> store["💾 Serialize artifacts"]
+  others --> cmp["📊 model_comparison.csv"]
+  best --> cmp
+
+  cmp --> analysis["🔎 Error/Trade-off analysis"]
+
+  subgraph PROP["Proposed (not implemented)"]
+    drift["📉 Drift monitoring"]
+    retrain["♻️ Periodic retraining"]
+    fb["📝 Analyst feedback loop"]
+  end
+
+  analysis -. proposed .-> drift
+  drift -. proposed .-> retrain
+  fb -. proposed .-> retrain
+
+  class train,best,others model;
+  class evalfn,analysis process;
+  class m1,m2,m3,m4,m5,m6,m7,m8,cmp,gate eval;
+  class store data;
+  class drift,retrain,fb infra;
